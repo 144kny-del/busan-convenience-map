@@ -102,9 +102,10 @@ const densityColor={high:'#ef5c54',mid:'#ffb52c',low:'#52b878'};
 const densityBox=document.createElement('div');
 densityBox.className='density-box';
 densityBox.innerHTML='<h3>인구 밀집도</h3><select id="densityTime"><option value="morning">오전 8시</option><option value="afternoon" selected>오후 2시</option><option value="evening">오후 7시</option></select><div class="density-legend"><span><i style="background:#ef5c54"></i>높음</span><span><i style="background:#ffb52c"></i>보통</span><span><i style="background:#52b878"></i>낮음</span></div><div class="search-count">* 시연용 추정 밀집도</div>';
-document.querySelector('.chips').parentElement.insertBefore(densityBox,document.querySelector('.info'));
+densityBox.hidden=true;
+document.querySelector('.info').before(densityBox);
 function showDensity(time){densityLayer.clearLayers();densityByTime[time].forEach(([name,lat,lng,r,level])=>L.circle([lat,lng],{radius:r,color:densityColor[level],fillColor:densityColor[level],fillOpacity:.2,weight:1.5,interactive:true}).bindTooltip(`${name} · ${level==='high'?'밀집 높음':'밀집 보통'}`,{className:'density-tip'}).addTo(densityLayer))}
-showDensity('afternoon');document.querySelector('#densityTime').onchange=e=>showDensity(e.target.value);
+// 공개 버전에서는 밀집도 레이어를 표시하지 않습니다.
 const suggestion=document.createElement('div');suggestion.className='suggestions';document.querySelector('.search').appendChild(suggestion);
 const allSearch=()=>[...places,...placesToSearch];
 function resultsFor(q){const text=q.toLowerCase();let r=allSearch().filter(p=>(p.n+' '+p.a+' '+(p.kind||'')).toLowerCase().includes(text));if(text.includes('지하철'))r=placesToSearch.filter(p=>p.kind==='지하철역');if(text.includes('버스'))r=placesToSearch.filter(p=>p.kind==='버스정류장');if(text.includes('카페'))r=placesToSearch.filter(p=>p.kind==='카페');return r}
@@ -147,7 +148,7 @@ showDensity=function(){
    L.circle([lat,lng],{radius:count>=25000?900:count>=10000?700:520,color:densityColor[level],fillColor:densityColor[level],fillOpacity:.25,weight:1.5,interactive:true}).bindTooltip(`${name}<br><b>${count.toLocaleString()}명</b> · 인구 밀집도 추정`,{className:'density-tip'}).addTo(densityLayer);
  });
 };
-showDensity();
+// 밀집도 표시 비활성화
 </script><script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script><script>
 let densityHeat=null;
 showDensity=function(){
@@ -157,7 +158,7 @@ showDensity=function(){
   const heatPoints=realLivingPopulation.map(([name,lat,lng,count])=>[lat,lng,.18+(count/max)*.82]);
   densityHeat=L.heatLayer(heatPoints,{radius:52,blur:48,maxZoom:16,minOpacity:.22,gradient:{.15:'#50b878',.42:'#ffd34e',.68:'#ff9b35',.9:'#ed5a52'}}).addTo(map);
 };
-showDensity();
+// 밀집도 표시 비활성화
 document.querySelector('.density-box h3').textContent='인구 밀집도 추정 히트맵';
 document.querySelector('.density-legend').innerHTML='<span><i style="background:#50b878"></i>낮음</span><span><i style="background:#ffd34e"></i>보통</span><span><i style="background:#ed5a52"></i>높음</span>';
 </script><style>
@@ -175,7 +176,7 @@ showDensity=function(){
     L.marker([lat,lng],{interactive:false,icon:L.divIcon({className:'',html:`<div class="density-badge ${level}">${level==='high'?'상':'중'}</div>`,iconSize:[27,27],iconAnchor:[13,13]})}).bindTooltip(`${name} · ${count.toLocaleString()}명`,{className:'density-tip',direction:'top'}).addTo(densityBadgeLayer);
   });
 };
-showDensity();
+// 밀집도 표시 비활성화
 </script><script>
 // Leaflet heat의 반경은 픽셀 단위이므로 줌 레벨에 맞춰 보정합니다.
 function scaledHeatRadius(){return 86}
@@ -184,7 +185,7 @@ showDensity=function(){
   originalShowDensity();
   if(densityHeat)densityHeat.setOptions({radius:scaledHeatRadius(),blur:Math.round(scaledHeatRadius()*.48)});
 };
-showDensity();
+// 밀집도 표시 비활성화
 map.on('zoomend',()=>{if(densityHeat)densityHeat.setOptions({radius:scaledHeatRadius(),blur:Math.round(scaledHeatRadius()*.48)})});
 </script><style>
 .density-blob{border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(222,54,52,.85) 0%,rgba(255,131,51,.58) 33%,rgba(255,210,61,.27) 60%,rgba(255,210,61,0) 74%)}.density-blob.mid{background:radial-gradient(circle,rgba(255,166,32,.78) 0%,rgba(255,205,54,.48) 37%,rgba(255,222,83,.18) 62%,rgba(255,222,83,0) 75%)}.density-blob.low{background:radial-gradient(circle,rgba(82,184,120,.55) 0%,rgba(142,210,101,.25) 45%,rgba(142,210,101,0) 75%)}
@@ -199,7 +200,7 @@ showDensity=function(){
     L.marker([lat,lng],{interactive:false,icon:L.divIcon({className:'',html:`<div class="density-blob ${level}" style="width:${size}px;height:${size}px"></div>`,iconSize:[size,size],iconAnchor:[size/2,size/2]})}).addTo(fixedDensityLayer);
   });
 };
-showDensity();
+// 밀집도 표시 비활성화
 </script><script>
 document.querySelector('.density-box')?.remove();
 if(densityHeat)map.removeLayer(densityHeat);
@@ -296,7 +297,7 @@ function chooseKakaoPlace(p){
   const phone=p.phone?escapeKakaoText(p.phone):'정보 없음';
   const walkMinutes=Math.max(1,Math.round(km*12));
   const call=p.phone?`<div class="detail-actions"><a href="tel:${escapeKakaoText(p.phone.replace(/[^0-9+]/g,''))}">전화 걸기</a></div>`:'';
-  $('#info').innerHTML=`<small>카카오 제공 장소 정보</small><h2>${(p.category||'').includes('카페')?'☕':'📍'} ${escapeKakaoText(p.n)}</h2><span class="distance">${distanceText} · 도보 약 ${walkMinutes}분</span><dl class="place-meta"><dt>분류</dt><dd>${escapeKakaoText(p.category||'장소')}</dd><dt>도로명</dt><dd>${escapeKakaoText(p.a)}</dd>${p.address&&p.address!==p.a?`<dt>지번</dt><dd>${escapeKakaoText(p.address)}</dd>`:''}<dt>전화</dt><dd>${phone}</dd></dl>${call}<small class="api-note">영업시간·사진·리뷰는 카카오 장소 검색 API에서 제공하지 않습니다.</small>`;
+  $('#info').innerHTML=`<small>${location.hostname.endsWith('github.io')?'공개 지도 장소 정보':'카카오 제공 장소 정보'}</small><h2>${(p.category||'').includes('카페')?'☕':'📍'} ${escapeKakaoText(p.n)}</h2><span class="distance">${distanceText} · 도보 약 ${walkMinutes}분</span><dl class="place-meta"><dt>분류</dt><dd>${escapeKakaoText(p.category||'장소')}</dd><dt>주소</dt><dd>${escapeKakaoText(p.a)}</dd>${p.address&&p.address!==p.a?`<dt>지번</dt><dd>${escapeKakaoText(p.address)}</dd>`:''}<dt>전화</dt><dd>${phone}</dd></dl>${call}<small class="api-note">${location.hostname.endsWith('github.io')?'공개 지도 데이터에는 영업시간·사진·리뷰가 없을 수 있습니다.':'영업시간·사진·리뷰는 카카오 장소 검색 API에서 제공하지 않습니다.'}</small>`;
   $('#routeTitle').textContent=p.n; $('#routeText').textContent=`${basis}에서 직선거리 ${distanceText} · 이동수단을 선택하세요`;
 }
 function kakaoDistance(p){const origin=kakaoOrigin();return map.distance([origin.lat,origin.lng],[p.lat,p.lng])/1000}
@@ -391,44 +392,79 @@ function kakaoDocumentToPlace(document){
 }
 async function publicMapSearch(query,requestId){
   const origin=kakaoOrigin();
-  const latitudeDelta=searchRadius/111.32;
-  const longitudeDelta=searchRadius/(111.32*Math.cos(origin.lat*Math.PI/180));
-  const viewbox=[
-    origin.lng-longitudeDelta,
-    origin.lat+latitudeDelta,
-    origin.lng+longitudeDelta,
-    origin.lat-latitudeDelta
-  ].join(',');
-  const params=new URLSearchParams({
-    format:'jsonv2',
-    addressdetails:'1',
-    limit:'50',
-    bounded:'1',
-    viewbox,
-    q:`${query} 부산`
-  });
   $('#status').className='status';
   $('#status').textContent=`공개 지도에서 ${searchRadius}km 반경의 '${query}' 장소를 검색하고 있어요…`;
-  const response=await fetch(`https://nominatim.openstreetmap.org/search?${params}`,{
-    headers:{Accept:'application/json'}
-  });
-  if(!response.ok)throw new Error('공개 장소 검색에 실패했습니다.');
-  const documents=await response.json();
+  const normalized=query.replace(/\s+/g,'').toLowerCase();
+  const categoryRules=[
+    {words:['카페','커피'],filter:'["amenity"="cafe"]',label:'카페'},
+    {words:['화장실','공중화장실'],filter:'["amenity"="toilets"]',label:'화장실'},
+    {words:['주차','주차장'],filter:'["amenity"="parking"]',label:'주차장'},
+    {words:['지하철','지하철역'],filter:'["railway"~"station|subway_entrance"]',label:'지하철'},
+    {words:['버스','버스정류장'],filter:'["highway"="bus_stop"]',label:'버스정류장'},
+    {words:['편의점'],filter:'["shop"="convenience"]',label:'편의점'},
+    {words:['병원','의원'],filter:'["amenity"~"hospital|clinic"]',label:'병원'},
+    {words:['약국'],filter:'["amenity"="pharmacy"]',label:'약국'},
+    {words:['식당','음식점','맛집'],filter:'["amenity"~"restaurant|fast_food"]',label:'음식점'},
+    {words:['공원'],filter:'["leisure"="park"]',label:'공원'}
+  ];
+  const rule=categoryRules.find(item=>item.words.some(word=>normalized.includes(word)));
+  let items=[];
+  if(rule){
+    const radius=Math.round(searchRadius*1000);
+    const overpass=`[out:json][timeout:20];nwr(around:${radius},${origin.lat},${origin.lng})${rule.filter};out center tags 100;`;
+    const response=await fetch('https://overpass-api.de/api/interpreter',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body:'data='+encodeURIComponent(overpass)
+    });
+    if(!response.ok)throw new Error('공개 시설 검색 서버가 잠시 응답하지 않습니다. 잠시 후 다시 검색해 주세요.');
+    const data=await response.json();
+    items=(data.elements||[]).map(element=>{
+      const tags=element.tags||{};
+      const lat=Number(element.lat??element.center?.lat);
+      const lng=Number(element.lon??element.center?.lon);
+      const address=[tags['addr:city'],tags['addr:district'],tags['addr:street'],tags['addr:housenumber']].filter(Boolean).join(' ')||'지도에서 위치 확인';
+      return {
+        id:`${element.type}-${element.id}`,
+        n:tags.name||tags['name:ko']||`${rule.label} ${element.id}`,
+        a:address,
+        address,
+        phone:tags.phone||tags['contact:phone']||'',
+        lat,lng,
+        category:rule.label
+      };
+    }).filter(place=>Number.isFinite(place.lat)&&Number.isFinite(place.lng));
+  }else{
+    const latitudeDelta=searchRadius/111.32;
+    const longitudeDelta=searchRadius/(111.32*Math.cos(origin.lat*Math.PI/180));
+    const params=new URLSearchParams({
+      format:'jsonv2',
+      addressdetails:'1',
+      limit:'50',
+      bounded:'1',
+      viewbox:[origin.lng-longitudeDelta,origin.lat+latitudeDelta,origin.lng+longitudeDelta,origin.lat-latitudeDelta].join(','),
+      q:`${query} 부산`
+    });
+    const response=await fetch(`https://nominatim.openstreetmap.org/search?${params}`,{headers:{Accept:'application/json'}});
+    if(!response.ok)throw new Error('공개 장소 검색에 실패했습니다.');
+    const documents=await response.json();
+    items=documents.map(document=>({
+      id:String(document.place_id||''),
+      n:document.name||String(document.display_name||'장소').split(',')[0],
+      a:document.display_name||'주소 정보 없음',
+      address:document.display_name||'',
+      phone:'',
+      lat:Number(document.lat),
+      lng:Number(document.lon),
+      category:[document.class,document.type].filter(Boolean).join(' > ')||'공개 지도 장소'
+    }));
+  }
   if(requestId!==kakaoSearchRequestId)return;
-  const items=documents.map(document=>({
-    id:String(document.place_id||''),
-    n:document.name||String(document.display_name||'장소').split(',')[0],
-    a:document.display_name||'주소 정보 없음',
-    address:document.display_name||'',
-    phone:'',
-    lat:Number(document.lat),
-    lng:Number(document.lon),
-    category:[document.class,document.type].filter(Boolean).join(' > ')||'공개 지도 장소'
-  })).filter(place=>
+  items=items.filter(place=>
     Number.isFinite(place.lat)&&
     Number.isFinite(place.lng)&&
     map.distance([origin.lat,origin.lng],[place.lat,place.lng])<=searchRadius*1000
-  ).sort((a,b)=>kakaoDistance(a)-kakaoDistance(b));
+  ).sort((a,b)=>kakaoDistance(a)-kakaoDistance(b)).slice(0,80);
   if(!items.length){
     kakaoResultsActive=true;
     currentKakaoResults=[];

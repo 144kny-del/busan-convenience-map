@@ -1,0 +1,12 @@
+{
+  "name": "busan-convenience-map",
+  "version": "1.0.0",
+  "private": true,
+  "description": "현재 위치 기반 부산 편의시설 검색 프로토타입",
+  "scripts": {
+    "start": "node busan-map-server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

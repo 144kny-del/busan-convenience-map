@@ -6,7 +6,7 @@ const path = require('path');
 const { URL } = require('url');
 
 const PORT = Number(process.env.PORT) || 3000;
-const HOST = '127.0.0.1';
+const HOST = process.env.HOST || '0.0.0.0';
 const APP_FILE = path.join(__dirname, 'busan-convenience-prototype.html');
 let runtimeKey = process.env.KAKAO_REST_API_KEY || '';
 
@@ -86,4 +86,3 @@ http.createServer(async (req, res) => {
 }).listen(PORT, HOST, () => {
   console.log(`Busan map is running: http://${HOST}:${PORT}`);
 });
-

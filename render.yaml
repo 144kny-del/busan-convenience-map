@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: busan-convenience-map
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: KAKAO_REST_API_KEY
+        sync: false

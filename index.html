@@ -12,7 +12,7 @@
 if(location.protocol==='file:'){
   location.replace('https://144kny-del.github.io/busan-convenience-map/');
 }
-</script><div class="app"><header><div class="brand">부산 <b>편의지도</b></div><div class="search"><input id="search" placeholder="카페, 화장실, 주차장 등 장소를 검색하세요"><button id="searchBtn">검색</button></div></header><main><aside><h1>내 주변, 더 편리하게</h1><p class="sub">검색어로 선택한 반경의 부산 시설을 찾아드려요.</p><button class="location" id="locate">⌖ 내 위치 정보 찾기</button><div class="status" id="status">위치를 찾은 뒤 검색어를 입력해 주세요.</div><div class="info" id="info"></div><span class="label">검색한 주변 시설</span><ul class="near-list" id="nearList"></ul><button class="more-results" id="moreResults" type="button" hidden>더보기</button></aside><section class="mapwrap"><div id="map"></div><div class="map-label">📍 부산 편의시설 지도<small id="mapNote">검색된 모든 시설을 개별 핀으로 표시합니다</small></div><div class="route"><h3 id="routeTitle">장소를 선택해 주세요</h3><p id="routeText">검색 결과의 핀을 누르면 길찾기를 이용할 수 있습니다.</p><div class="route-modes" id="routeModes"><button class="active" data-mode="walk">🚶 도보</button><button data-mode="traffic">🚌 대중교통</button><button data-mode="car">🚗 자동차</button></div><button id="routeBtn">카카오맵에서 도보 길찾기</button></div></section></main></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
+</script><div class="app"><header><div class="brand">부산 <b>편의지도</b></div><div class="search"><input id="search" placeholder="카페, 화장실, 주차장 등 장소를 검색하세요"><button id="searchBtn">검색</button></div></header><main><aside><h1>내 주변, 더 편리하게</h1><p class="sub">검색어로 선택한 반경의 부산 시설을 찾아드려요.</p><button class="location" id="locate">⌖ 내 위치 정보 찾기</button><div class="status" id="status">위치를 찾은 뒤 검색어를 입력해 주세요.</div><div class="info" id="info"></div><span class="label">검색한 주변 시설</span><ul class="near-list" id="nearList"></ul><button class="more-results" id="moreResults" type="button" hidden>더보기</button></aside><section class="mapwrap"><div id="map"></div><div class="map-label">📍 부산 편의시설 지도<small id="mapNote">검색된 모든 시설을 개별 핀으로 표시합니다</small></div><div class="route"><h3 id="routeTitle">장소를 선택해 주세요</h3><p id="routeText">검색 결과의 핀을 누르면 길찾기를 이용할 수 있습니다.</p><div class="route-modes" id="routeModes"><button class="active" data-mode="walk">🚶 도보</button><button data-mode="traffic">🚌 대중교통</button><button data-mode="car">🚗 자동차</button></div><button id="routeBtn">카카오맵에서 도보 길찾기</button></div></section></main></div><script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=513287b666a454c6b10e49adee344dc7&libraries=services"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
 const places=[{n:'서면역 공중화장실',t:'toilet',i:'🚻',lat:35.1578,lng:129.0592,a:'부산진구 중앙대로 730 · 24시간'},{n:'전포 반려견 동반 카페',t:'pet',i:'🐕',lat:35.1551,lng:129.0649,a:'부산진구 전포대로 209 · 10:00–21:00'},{n:'부전 공영주차장',t:'parking',i:'🅿️',lat:35.1600,lng:129.0570,a:'부산진구 부전동 573 · 24시간'},{n:'서면역 짐 보관소',t:'luggage',i:'🧳',lat:35.1572,lng:129.0580,a:'서면역 1번 출구 · 06:00–23:00'},{n:'부산시민공원 화장실',t:'toilet',i:'🚻',lat:35.1690,lng:129.0565,a:'부산진구 시민공원로 73 · 06:00–23:00'},{n:'해운대 공영주차장',t:'parking',i:'🅿️',lat:35.1587,lng:129.1603,a:'해운대구 해운대해변로 · 24시간'}];const map=L.map('map').setView([35.1578,129.0592],14);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);let pos=null,user=null,watch=null,selected=places[0],routeLine=null;const layer=L.layerGroup().addTo(map),$=x=>document.querySelector(x);function icon(p){return L.divIcon({className:'',html:`<div class="facility-icon ${p.t}"><span>${p.i}</span></div>`,iconSize:[34,34],iconAnchor:[17,34]})}function distance(p){if(!pos)return null;return map.distance([pos.lat,pos.lng],[p.lat,p.lng])/1000}function active(){return [...document.querySelectorAll('.chip.active')].map(x=>x.dataset.type)}function draw(p){selected=p;const km=distance(p);$('#info').innerHTML=`<small>선택한 시설</small><h2>${p.i} ${p.n}</h2><p>${p.a}</p>${km!==null?`<span class="distance">${km<1?Math.round(km*1000)+'m':km.toFixed(1)+'km'} · 도보 약 ${Math.max(1,Math.round(km*12))}분</span>`:''}`;$('#routeTitle').textContent=p.n;$('#routeText').textContent=km===null?'내 위치 정보 찾기 후 거리와 경로를 확인하세요.':`내 위치에서 ${km<1?Math.round(km*1000)+'m':km.toFixed(1)+'km'} · 도보 약 ${Math.max(1,Math.round(km*12))}분`;render()}function render(){layer.clearLayers();places.filter(p=>active().includes(p.t)).forEach(p=>L.marker([p.lat,p.lng],{icon:icon(p)}).on('click',()=>draw(p)).bindTooltip(p.n,{direction:'top'}).addTo(layer));const list=places.filter(p=>active().includes(p.t)).sort((a,b)=>(distance(a)??0)-(distance(b)??0));$('#nearList').innerHTML=list.slice(0,5).map(p=>`<li><button data-name="${p.n}">${p.i} ${p.n}<b>${pos?(distance(p)<1?Math.round(distance(p)*1000)+'m':distance(p).toFixed(1)+'km'):'보기'}</b></button></li>`).join('');document.querySelectorAll('#nearList button').forEach(b=>b.onclick=()=>draw(places.find(p=>p.n===b.dataset.name)))}function locate(){if(!navigator.geolocation){$('#status').textContent='이 브라우저는 위치 기능을 지원하지 않습니다.';return}if(watch!==null&&pos){map.setView([pos.lat,pos.lng],15);return}$('#status').textContent='위치 권한을 요청하고 있어요…';watch=navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude};if(!user)user=L.marker([pos.lat,pos.lng],{icon:L.divIcon({className:'',html:'<div class="user-icon"></div>',iconSize:[20,20],iconAnchor:[10,10]})}).addTo(map).bindTooltip('내 현재 위치');else user.setLatLng([pos.lat,pos.lng]);$('#status').className='status ok';$('#status').textContent='● 실시간 위치 추적 중 · 정확도 약 '+Math.round(p.coords.accuracy)+'m';$('#mapNote').textContent='파란 점은 내 위치이며 지도 이동과 함께 실제 좌표에 고정됩니다';map.setView([pos.lat,pos.lng],15);const closest=places.filter(x=>active().includes(x.t)).sort((a,b)=>distance(a)-distance(b))[0];if(closest)draw(closest);else render()},()=>{$('#status').textContent='위치 권한을 허용해 주세요. 주소 표시줄의 위치 권한을 확인하세요.';watch=null},{enableHighAccuracy:true,maximumAge:5000,timeout:15000})}$('#locate').onclick=locate;$('#routeBtn').onclick=()=>{if(!pos){locate();return}if(routeLine)map.removeLayer(routeLine);routeLine=L.polyline([[pos.lat,pos.lng],[selected.lat,selected.lng]],{color:'#1769e0',weight:5,dashArray:'8 8'}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[70,70]});$('#mapNote').textContent='파란 점선은 내 위치에서 시설까지의 직선 안내입니다'};document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{b.classList.toggle('active');render();if(pos){const p=places.filter(x=>active().includes(x.t)).sort((a,b)=>distance(a)-distance(b))[0];if(p)draw(p)}});function search(){const q=$('#search').value.trim();const p=places.find(x=>x.n.includes(q)||x.a.includes(q));if(!p){$('#status').textContent='일치하는 시설이 없습니다. 예: 서면, 해운대, 화장실';return}if(!active().includes(p.t))document.querySelector(`.chip[data-type="${p.t}"]`).classList.add('active');draw(p);map.setView([p.lat,p.lng],17);$('#mapNote').textContent='검색한 시설 위치를 표시합니다'}$('#searchBtn').onclick=search;$('#search').onkeydown=e=>{if(e.key==='Enter')search()};draw(selected);
 </script><script>
 // 3km 반경용 데모 시설: 동일 종류의 시설도 각각 별도 표시합니다.
@@ -401,6 +401,37 @@ function kakaoCoverageCenters(origin,radiusKm){
 function kakaoDocumentToPlace(document){
   return {id:document.id||'',n:document.place_name,a:document.road_address_name||document.address_name||'주소 정보 없음',address:document.address_name||'',phone:document.phone||'',lat:Number(document.y),lng:Number(document.x),category:document.category_name||'카카오 장소'};
 }
+function kakaoSdkPlaceSearch(query,origin,radiusKm){
+  return new Promise((resolve,reject)=>{
+    const services=window.kakao?.maps?.services;
+    if(!services?.Places)return reject(new Error('카카오 장소 검색을 불러오지 못했습니다.'));
+    const places=new services.Places();
+    const documents=[];
+    let pageCount=0;
+    const options={
+      location:new window.kakao.maps.LatLng(origin.lat,origin.lng),
+      radius:Math.round(radiusKm*1000),
+      size:15,
+      sort:services.SortBy.DISTANCE
+    };
+    const callback=(data,status,pagination)=>{
+      pageCount+=1;
+      if(status===services.Status.OK){
+        documents.push(...data);
+        if(pagination.hasNextPage&&pageCount<3){
+          pagination.nextPage();
+        }else{
+          resolve(documents.map(kakaoDocumentToPlace));
+        }
+      }else if(status===services.Status.ZERO_RESULT){
+        resolve([]);
+      }else{
+        reject(new Error('카카오 장소 검색에 실패했습니다.'));
+      }
+    };
+    places.keywordSearch(query,callback,options);
+  });
+}
 async function fetchJsonWithTimeout(url,options={},timeoutMs=12000){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeoutMs);
@@ -467,7 +498,14 @@ async function publicMapSearch(query,requestId){
   ];
   const rule=categoryRules.find(item=>item.words.some(word=>normalized.includes(word)));
   let items=[];
-  if(rule){
+  let usedKakaoSdk=false;
+  if(window.kakao?.maps?.services?.Places){
+    try{
+      items=await kakaoSdkPlaceSearch(query,origin,searchRadius);
+      usedKakaoSdk=true;
+    }catch{}
+  }
+  if(!usedKakaoSdk&&rule){
     const radius=Math.round(searchRadius*1000);
     const overpass=`[out:json][timeout:20];nwr(around:${radius},${origin.lat},${origin.lng})${rule.filter};out center tags 100;`;
     const response=await fetch('https://overpass-api.de/api/interpreter',{
@@ -492,7 +530,7 @@ async function publicMapSearch(query,requestId){
         category:rule.label
       };
     }).filter(place=>Number.isFinite(place.lat)&&Number.isFinite(place.lng));
-  }else{
+  }else if(!usedKakaoSdk){
     const latitudeDelta=searchRadius/111.32;
     const longitudeDelta=searchRadius/(111.32*Math.cos(origin.lat*Math.PI/180));
     const params=new URLSearchParams({

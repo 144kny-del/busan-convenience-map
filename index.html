@@ -403,6 +403,9 @@ function kakaoDocumentToPlace(document){
 }
 function kakaoSdkPlaceSearch(query,origin,radiusKm){
   return new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>
+      reject(new Error('카카오 검색 연결 시간이 초과되었습니다.')),5000
+    );
     const services=window.kakao?.maps?.services;
     if(!services?.Places)return reject(new Error('카카오 장소 검색을 불러오지 못했습니다.'));
     const places=new services.Places();
@@ -421,9 +424,11 @@ function kakaoSdkPlaceSearch(query,origin,radiusKm){
         if(pagination.hasNextPage&&pageCount<3){
           pagination.nextPage();
         }else{
+          clearTimeout(timeout);
           resolve(documents.map(kakaoDocumentToPlace));
         }
       }else if(status===services.Status.ZERO_RESULT){
+        clearTimeout(timeout);
         resolve([]);
       }else{
         reject(new Error('카카오 장소 검색에 실패했습니다.'));
@@ -431,6 +436,38 @@ function kakaoSdkPlaceSearch(query,origin,radiusKm){
     };
     places.keywordSearch(query,callback,options);
   });
+}
+async function nominatimPlaceSearch(query,origin,radiusKm){
+  const latitudeDelta=radiusKm/111.32;
+  const longitudeDelta=radiusKm/(111.32*Math.cos(origin.lat*Math.PI/180));
+  const params=new URLSearchParams({
+    format:'jsonv2',
+    addressdetails:'1',
+    limit:'50',
+    bounded:'1',
+    viewbox:[
+      origin.lng-longitudeDelta,
+      origin.lat+latitudeDelta,
+      origin.lng+longitudeDelta,
+      origin.lat-latitudeDelta
+    ].join(','),
+    q:`${query} 부산`
+  });
+  const documents=await fetchJsonWithTimeout(
+    `https://nominatim.openstreetmap.org/search?${params}`,
+    {headers:{Accept:'application/json'}},
+    8000
+  );
+  return documents.map(document=>({
+    id:String(document.place_id||''),
+    n:document.name||String(document.display_name||'장소').split(',')[0],
+    a:document.display_name||'주소 정보 없음',
+    address:document.display_name||'',
+    phone:'',
+    lat:Number(document.lat),
+    lng:Number(document.lon),
+    category:[document.class,document.type].filter(Boolean).join(' > ')||'공개 지도 장소'
+  }));
 }
 async function fetchJsonWithTimeout(url,options={},timeoutMs=12000){
   const controller=new AbortController();
@@ -502,6 +539,12 @@ async function publicMapSearch(query,requestId){
   if(window.kakao?.maps?.services?.Places){
     try{
       items=await kakaoSdkPlaceSearch(query,origin,searchRadius);
+      usedKakaoSdk=true;
+    }catch{}
+  }
+  if(!usedKakaoSdk){
+    try{
+      items=await nominatimPlaceSearch(query,origin,searchRadius);
       usedKakaoSdk=true;
     }catch{}
   }
